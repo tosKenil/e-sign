@@ -113,7 +113,6 @@ const uploadSignedFile = multer({
 // --- Generate multiple templates ---
 app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => {
     console.log("-0---------------")
-    console.log("-0---------------", `${BASE_URL}/storage/originals`)
     try {
         const { templates, name, address, company_name, uen, reg_address, date } = req.body;
 
@@ -133,6 +132,7 @@ app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => 
         const files = [];
         for (const type of selected) {
             const tplPath = path.join(__dirname, "templates", `${type}.html`);
+            console.log("🚀 ~ tplPath:", tplPath)
             if (!fs.existsSync(tplPath)) continue;
 
             const raw = await fsp.readFile(tplPath, "utf8");
