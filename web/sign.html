@@ -657,6 +657,7 @@
             `${BASE}/api/envelopes/${token}/complete`,
             { method: "POST", body: fd },
           );
+          console.log("resp==============", resp)
           setMsg(
             resp.ok
               ? "✅ Signed PDF uploaded successfully!"
