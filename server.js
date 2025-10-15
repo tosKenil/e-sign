@@ -113,7 +113,7 @@ const uploadSignedFile = multer({
 // --- Generate multiple templates ---
 app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => {
     console.log("-0---------------")
-    console.log("-0---------------", `${BASE_URL}/storage/originals/${fileName}`)
+    console.log("-0---------------", `${BASE_URL}/storage/originals`)
     try {
         const { templates, name, address, company_name, uen, reg_address, date } = req.body;
 
