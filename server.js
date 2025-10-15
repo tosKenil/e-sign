@@ -27,9 +27,10 @@ const PORT = process.env.PORT || 4011;
 const BASE_URL = process.env.BASE_URL || `https://e-sign-eight.vercel.app`;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const expireTime = { expiresIn: "100m" };
+const IS_PROD = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
 
 // -------------------- STORAGE PATHS --------------------
-const STORAGE_DIR = path.join(__dirname, "storage");
+const STORAGE_BASE = IS_PROD ? "/tmp/storage" : path.join(__dirname, "storage");
 const ORIGINALS_DIR = path.join(STORAGE_DIR, "originals");
 const SIGNED_DIR = path.join(STORAGE_DIR, "signed");
 
