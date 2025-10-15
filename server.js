@@ -13,11 +13,18 @@ const { SIGN_EVENTS } = require("./contance.js");
 
 const app = express();
 app.use(express.json({ limit: "20mb" }));
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:3000",
+        "https://e-sign-eight.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true
+}));
 
 // -------------------- ENV CONFIG --------------------
 const PORT = process.env.PORT || 4011;
-const BASE_URL = process.env.BASE_URL || `https://29433kp4-4011.inc1.devtunnels.ms`;
+const BASE_URL = process.env.BASE_URL || `https://e-sign-eight.vercel.app`;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const expireTime = { expiresIn: "100m" };
 
@@ -139,6 +146,8 @@ app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => 
             const fileName = `${Date.now()}-${generateId()}-${type}.html`;
             const outPath = path.join(ORIGINALS_DIR, fileName);
             await fsp.writeFile(outPath, html);
+
+            console.log("=====================", `${BASE_URL}/storage/originals/${fileName}`)
 
             files.push({
                 filename: fileName,
