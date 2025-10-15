@@ -198,10 +198,8 @@ app.get("/api/envelopes/by-token/:token", verifyJWT, async (req, res) => {
 
 app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("file"), async (req, res) => {
     try {
-        console.log("🚀 ~ req._id:", req._id)
         const env = await Envelope.findById(req._id);
         if (!env) return res.status(404).json({ error: "Envelope not found" });
-        console.log("🚀 ~ env:", env)
 
         env.signedPdf = {
             filename: req.file.filename,
@@ -212,7 +210,7 @@ app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("f
 
         res.json({ ok: true, downloadUrl: env.signedPdf.publicUrl });
     } catch (err) {
-        console.error("err",err);
+        console.error(err);
         res.status(500).json({ error: "Upload failed" });
     }
 }
