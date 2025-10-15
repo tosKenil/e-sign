@@ -151,12 +151,12 @@ app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => 
 
             console.log("=====================", `${BASE_URL}/storage/originals/${fileName}`)
 
-            files.push({
-                filename: fileName,
-                storedName: fileName,
-                publicUrl: `${BASE_URL}/storage/originals/${fileName}`,
-                mimetype: "text/html",
-            });
+            // files.push({
+            //     filename: fileName,
+            //     storedName: fileName,
+            //     publicUrl: `${BASE_URL}/storage/originals/${fileName}`,
+            //     mimetype: "text/html",
+            // });
         }
 
         if (files.length === 0)
