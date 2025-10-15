@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Generate eSign</title>
+</head>
+
+<body>
+  <h2>Generate Multiple Templates</h2>
+  <form id="genForm">
+    <label>Select Templates:</label><br>
+    <label><input type="checkbox" name="templates" value="form45"> Form 45</label><br>
+    <label><input type="checkbox" name="templates" value="form45b"> Form 45B</label><br>
+    <label><input type="checkbox" name="templates" value="firstDriw"> First Draw</label><br><br>
+
+    <input name="company_name" placeholder="Company Name" required><br><br>
+    <input name="uen" placeholder="UEN"><br><br>
+    <input name="name" placeholder="Full Name" required><br><br>
+    <input name="reg_address" placeholder="Registered Address" required><br><br>
+    <input name="address" placeholder="Address" required><br><br>
+    <input name="date" type="date" required><br><br>
+    <button type="submit">Generate & Sign</button>
+  </form>
+
+  <script>
+    document.getElementById("genForm").onsubmit = async e => {
+      e.preventDefault();
+
+      const fd = new FormData();
+      const boxes = [...document.querySelectorAll("input[name='templates']:checked")].map(b => b.value);
+      if (boxes.length === 0) return alert("Please select at least one template.");
+
+      fd.append("templates", JSON.stringify(boxes));
+
+      ["company_name", "uen", "name", "reg_address", "address", "date"].forEach(id => {
+        const el = e.target.querySelector(`[name='${id}']`);
+        if (el) fd.append(id, el.value);
+      });
+
+      try {
+        const resp = await fetch("/api/generate-template", { method: "POST", body: fd });
+        const data = await resp.json();
+        if (data.signUrl) location.href = data.signUrl;
+        else alert(data.error || "Error generating templates");
+      } catch (err) {
+        alert("Failed to connect to server: " + err.message);
+      }
+    };
+  </script>
+</body>
+
+</html>

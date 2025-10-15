@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>
+        <h3 class="company-title">{{company_name}} {{company_suffix}}</h3>
+        <p style="text-align: center;">
+            Incorporated in the Republic of Singapore<br>
+            Company No. {{uen}}<br>
+            (the "Company")
+        </p>
+
+        <!-- Resolution Title -->
+        <h3>DIRECTORS' RESOLUTIONS IN WRITING PASSED PURSUANT TO THE<br>COMPANY'S CONSTITUTION</h3>
+        <hr>res
+    </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 96px 96px 96px 96px;
+            color: #000;
+        }
+
+        h3 {
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .company-details {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .company-details p {
+            margin: 0;
+        }
+
+        .main-title {
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0 10px 0;
+            text-transform: uppercase;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #000;
+            margin: 10px 0 30px 0;
+        }
+
+        .underline {
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
+        .section {
+            margin: 30px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #000;
+        }
+
+        td {
+            padding: 10px;
+            vertical-align: top;
+        }
+
+
+        .director-signature {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            width: 75%;
+            gap: 100px;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 200px;
+            margin: 0 auto 5px auto;
+        }
+
+        .signature-name {
+            font-weight: bold;
+        }
+
+        .date-line {
+            margin-top: 20px;
+        }
+
+        .by-label {
+            margin-bottom: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="company-details">
+        <h1>{{company_name}} {{company_suffix}}</h1>
+        <p>Incorporated in the Republic of Singapore</p>
+        <p>Company No. {{uen}}</p>
+        <p><em>(the “Company”)</em></p>
+    </div>
+
+    <!-- Resolution Title -->
+    <p class="main-title">Directors’ Resolutions in Writing Passed Pursuant to the <br> Company’s Constitution</p>
+    <hr>
+    <!-- Transfer Resolution -->
+    <div class="section">
+        <p><strong>Ordinary business:</strong></p>
+        <p style="margin-left: 30px;"><strong>1. TRANSFER OF SHARES</strong></p>
+        <p style="margin-left: 50px;">It was resolved to approve the following transfer of shares:</p>
+
+        <table>
+            <tr>
+                <td><strong>Transferor</strong></td>
+                <td>{{name}}</td>
+            </tr>
+            <tr>
+                <td><strong>NRIC No.</strong></td>
+                <td>{{id_number}}</td>
+            </tr>
+            <tr>
+                <td><strong>Transferee</strong></td>
+                <td>{{transferee}}</td>
+            </tr>
+            <tr>
+                <td><strong>NRIC No.</strong></td>
+                <td>{{transferee_id_number}}</td>
+            </tr>
+            <tr>
+                <td><strong>No of shares</strong></td>
+                <td>{{number_of_share}}, {{share_type}} Fully Paid</td>
+            </tr>
+            <tr>
+                <td><strong>Total consideration paid</strong></td>
+                <td>S$ {{total_paid}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Secretary Instructions -->
+    <div class="section">
+        <p class="underline">PREPARATION OF DOCUMENTS:</p>
+        <p>
+            The secretary was requested to complete the documents required to reflect the
+            change to members of the Company.
+        </p>
+        <p>
+            It was also resolved to complete the new share certificates pursuant to the rules that
+            govern the execution of documents by the Company and to cancel any certificates
+            that are no longer required.
+        </p>
+        <p>Signed by the directors of the Company:</p>
+    </div>
+
+    <div style="position: absolute;width:100% ;bottom: 30px;">
+
+        <div class="director-signature">
+            {{signature_rows}}
+
+        </div>
+        <p>Dated: {{date}}</p>
+    </div>
+
+</body>
+
+</html>

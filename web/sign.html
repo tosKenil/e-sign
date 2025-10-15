@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini eSign – Sign Document</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Allura&family=Dancing+Script:wght@700&family=Great+Vibes&family=Pacifico&family=Satisfy&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: #111;
+      color: #eee;
+      font-family:
+        system-ui,
+        -apple-system,
+        Segoe UI,
+        Roboto,
+        sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+
+    aside {
+      width: 366px;
+      padding: 12px;
+      background: #1b1b1b;
+      overflow-y: auto;
+      border-right: 1px solid #2a2a2a;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      overflow-y: auto;
+      padding: 12px;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel {
+      background: #151515;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+
+    .panel h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    iframe.docFrame {
+      width: 800px;
+      height: 1100px;
+      border: 1px solid #444;
+      background: #fff;
+    }
+
+    #sigPad {
+      width: 100%;
+      height: 160px;
+      border: 2px solid #0af;
+      background: transparent;
+      border-radius: 6px;
+      touch-action: none;
+    }
+
+    button {
+      margin: 4px 0;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #2a2a2a;
+      color: #eee;
+    }
+
+    #sigModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    #sigModalInner {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 90%;
+      max-width: 800px;
+      height: 50vh;
+    }
+
+    #bigSigCanvas {
+      border: 2px solid #0af;
+      border-radius: 6px;
+      background: #fff;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    button.primary {
+      background: #0af;
+      color: #fff;
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #fff;
+      color: #000;
+    }
+
+    #fontPreviewArea>.preview {
+      margin: 6px 0;
+      padding: 8px 10px;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      color: #fff;
+      user-select: none;
+      transition:
+        background 0.15s ease,
+        transform 0.06s ease;
+    }
+
+    #fontPreviewArea>.preview:hover {
+      background: #2a2a2a;
+    }
+
+    #fontPreviewArea>.preview:active {
+      transform: scale(0.99);
+    }
+
+    #msg {
+      font-size: 12px;
+      margin-top: 6px;
+      min-height: 16px;
+      color: #b9e3ff;
+    }
+
+    .signature-line {
+      min-height: 60px;
+      border-bottom: 2px dashed #888;
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <aside>
+    <div class="panel">
+      <h3>Envelope</h3>
+      <div id="envelopeInfo">Loading…</div>
+    </div>
+    <div class="panel">
+      <h3>Signature Pad</h3>
+      <canvas id="sigPad"></canvas><br /><button id="sigClear">
+        Clear</button><button id="sigDrag" class="primary" draggable="true">
+        Drag Pad Sign
+      </button>
+    </div>
+    <div id="sigModal">
+      <div id="sigModalInner">
+        <canvas id="bigSigCanvas"></canvas>
+        <div>
+          <button id="bigSigClear">Clear</button><button id="bigSigDone" class="primary">Done</button><button
+            id="bigSigClose">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Text Signature</h3>
+      <input type="text" id="nameInput" placeholder="Type your name" />
+      <div id="fontPreviewArea" style="margin-top: 8px"></div>
+      <button id="selectTextSign" class="primary" style="background: #444">
+        Select Sign</button><button id="nameDrag" class="primary" draggable="true">
+        Drag Sign
+      </button>
+    </div>
+    <div class="panel">
+      <h3>Image Signature</h3>
+      <input type="file" id="sigImgInput" accept="image/*" /><button id="imgDrag" class="primary" draggable="true">
+        Drag Image Sign
+      </button>
+    </div>
+    <div class="panel">
+      <h3>Actions</h3>
+      <button id="applyAllBtn" class="primary" style="background: #28a745">
+        Apply to All Docs</button><button id="cancelBtn">Cancel</button><button id="completeBtn"
+        class="primary">Complete</button>
+      <div id="msg"></div>
+    </div>
+  </aside>
+  <main>
+    <div id="stage"></div>
+  </main>
+  <script>
+    (function () {
+      const stage = document.getElementById("stage"),
+        msg = document.getElementById("msg"),
+        sigPad = document.getElementById("sigPad"),
+        token = location.pathname.split("/").pop(),
+        BASE = location.origin;
+      let padSig = null,
+        nameSig = null,
+        imgSig = null,
+        lastSigType = null;
+      function setMsg(t) {
+        msg.textContent = t || "";
+      }
+      function clearPad() {
+        const c = sigPad.getContext("2d");
+        c.clearRect(0, 0, sigPad.width, sigPad.height);
+        pointsAll = [];
+      }
+      function resetOtherSigns(except) {
+        if (except !== "pad") {
+          clearPad();
+          padSig = null;
+        }
+        if (except !== "name") {
+          nameSig = null;
+          document.getElementById("nameInput").value = "";
+          updateFontPreviews();
+        }
+        if (except !== "img") {
+          imgSig = null;
+          document.getElementById("sigImgInput").value = "";
+        }
+      }
+      const pctx = sigPad.getContext("2d");
+      function setupPad() {
+        const dpr = window.devicePixelRatio || 1,
+          rect = sigPad.getBoundingClientRect();
+        sigPad.width = rect.width * dpr;
+        sigPad.height = rect.height * dpr;
+        pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        pctx.lineWidth = 3;
+        pctx.lineJoin = "round";
+        pctx.lineCap = "round";
+        pctx.strokeStyle = "#000";
+      }
+      setupPad();
+      window.addEventListener("resize", setupPad);
+      let drawing = false,
+        points = [],
+        pointsAll = [];
+      function drawSmoothLine(ctx, pts) {
+        if (pts.length < 3) {
+          const b = pts[0];
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 1, 0, 2 * Math.PI, !0);
+          ctx.fill();
+          return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 2; i++) {
+          const c = (pts[i].x + pts[i + 1].x) / 2,
+            m = (pts[i].y + pts[i + 1].y) / 2;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, c, m);
+        }
+        const n = pts.length - 1;
+        ctx.quadraticCurveTo(
+          pts[n - 1].x,
+          pts[n - 1].y,
+          pts[n].x,
+          pts[n].y,
+        );
+        ctx.stroke();
+      }
+      sigPad.addEventListener("mousedown", (e) => {
+        drawing = true;
+        points = [{ x: e.offsetX, y: e.offsetY }];
+      });
+      sigPad.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
+        points.push({ x: e.offsetX, y: e.offsetY });
+        pctx.clearRect(0, 0, sigPad.width, sigPad.height);
+        pointsAll.forEach((p) => drawSmoothLine(pctx, p));
+        drawSmoothLine(pctx, points);
+      });
+      window.addEventListener("mouseup", () => {
+        if (!drawing) return;
+        drawing = false;
+        pointsAll.push(points);
+        padSig = sigPad.toDataURL("image/png");
+        lastSigType = "pad";
+        resetOtherSigns("pad");
+        setMsg("🖋️ Pad signature ready (others cleared)");
+      });
+      document.getElementById("sigClear").onclick = () => {
+        clearPad();
+        padSig = null;
+        setMsg("Pad cleared");
+      };
+      const nameInput = document.getElementById("nameInput"),
+        fontPreviewArea = document.getElementById("fontPreviewArea"),
+        selectBtn = document.getElementById("selectTextSign");
+      const fonts = [
+        { name: "Great Vibes", css: "Great Vibes, cursive" },
+        { name: "Pacifico", css: "Pacifico, cursive" },
+        { name: "Dancing Script", css: "'Dancing Script', cursive" },
+        { name: "Satisfy", css: "Satisfy, cursive" },
+        { name: "Allura", css: "Allura, cursive" },
+      ];
+      let selectedFont = fonts[0].css;
+      function updateFontPreviews() {
+        const text = nameInput.value.trim() || "Your Name";
+        fontPreviewArea.innerHTML = "";
+        fonts.forEach((font) => {
+          const div = document.createElement("div");
+          div.className = "preview";
+          div.textContent = text;
+          div.style.fontFamily = font.css;
+          div.style.fontSize = "36px";
+          div.onclick = () => {
+            selectedFont = font.css;
+            document
+              .querySelectorAll(".preview")
+              .forEach((p) => (p.style.borderColor = "#333"));
+            div.style.borderColor = "#0af";
+          };
+          fontPreviewArea.appendChild(div);
+        });
+      }
+      nameInput.addEventListener("input", updateFontPreviews);
+      updateFontPreviews();
+      function generateTextSignature(fontCSS, text) {
+        const c = document.createElement("canvas");
+        c.width = 500;
+        c.height = 140;
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#000";
+        ctx.font = `bold 64px ${fontCSS}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, 250, 70);
+        return c.toDataURL("image/png");
+      }
+      selectBtn.onclick = () => {
+        const text = nameInput.value.trim();
+        if (!text) return setMsg("⚠️ Type your name first.");
+        const sig = generateTextSignature(selectedFont, text);
+        resetOtherSigns("name");
+        nameSig = sig;
+        lastSigType = "name";
+        setMsg("✅ Text signature selected (others cleared)");
+      };
+      document.getElementById("nameDrag").ondragstart = (e) => {
+        if (!nameSig) {
+          setMsg("⚠️ Please select a text signature first.");
+          return e.preventDefault();
+        }
+        e.dataTransfer.setData("sigType", "name");
+        lastSigType = "name";
+      };
+      document.getElementById("sigImgInput").onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        resetOtherSigns("img");
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement("canvas");
+          c.width = img.width;
+          c.height = img.height;
+          const ctx = c.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          imgSig = c.toDataURL("image/png");
+          lastSigType = "img";
+          setMsg("🖼️ Image signature ready (others cleared)");
+        };
+        img.src = URL.createObjectURL(file);
+      };
+      async function loadEnvelope() {
+        try {
+          const resp = await fetch(
+            `${BASE}/api/envelopes/by-token/${token}`,
+          );
+          if (!resp.ok) {
+            setMsg("Envelope not found");
+            return;
+          }
+          const data = await resp.json();
+          document.getElementById("envelopeInfo").innerHTML =
+            `<strong>${data.recipientName}</strong>`;
+          for (const f of data.files) {
+            const fileUrl = f.url.startsWith("http")
+              ? f.url
+              : `${BASE}${f.url}`;
+            if (
+              f.mimetype === "text/html" ||
+              fileUrl.endsWith(".html")
+            )
+              await renderHtmlUrl(fileUrl);
+          }
+        } catch {
+          setMsg("⚠️ Failed to load envelope.");
+        }
+      }
+      async function renderHtmlUrl(url) {
+        const iframe = document.createElement("iframe");
+        iframe.src = url;
+        iframe.className = "docFrame";
+        iframe.onload = () => setupIframeDragDrop(iframe);
+        stage.appendChild(iframe);
+      }
+      function setupIframeDragDrop(iframe) {
+        const doc = iframe.contentDocument;
+        doc.addEventListener("dragover", (e) => e.preventDefault());
+        doc.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const sigType = e.dataTransfer.getData("sigType");
+          const sigSrc =
+            sigType === "pad"
+              ? padSig
+              : sigType === "name"
+                ? nameSig
+                : imgSig;
+          if (!sigSrc)
+            return alert("⚠️ Please create a signature first.");
+          let container = e.target.closest(".signature-line");
+          if (!container) container = doc.body;
+          if (getComputedStyle(container).position === "static") {
+            container.style.position = "relative";
+          }
+          const containerRect = container.getBoundingClientRect();
+          const x =
+            e.clientX - containerRect.left + container.scrollLeft;
+          const y = e.clientY - containerRect.top + container.scrollTop;
+          const safeX = Math.max(
+            0,
+            Math.min(x, container.clientWidth - 160),
+          );
+          const safeY = Math.max(
+            0,
+            Math.min(y, container.clientHeight - 70),
+          );
+          createSignatureElement(doc, sigSrc, safeX, safeY, container);
+        });
+      }
+      function createSignatureElement(doc, src, x, y, parentEl) {
+        const el = doc.createElement("div");
+        el.className = "placed-signature";
+        Object.assign(el.style, {
+          position: "absolute",
+          left: x + "px",
+          top: y + "px",
+          width: "160px",
+          height: "70px",
+          backgroundImage: `url(${src})`,
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          border: "2px dashed #0af",
+          borderRadius: "6px",
+          cursor: "move",
+          userSelect: "none",
+          boxSizing: "border-box",
+        });
+        const closeBtn = doc.createElement("div");
+        closeBtn.textContent = "×";
+        Object.assign(closeBtn.style, {
+          position: "absolute",
+          top: "-10px",
+          right: "-10px",
+          width: "20px",
+          height: "20px",
+          background: "#f33",
+          color: "#fff",
+          textAlign: "center",
+          lineHeight: "20px",
+          borderRadius: "50%",
+          cursor: "pointer",
+          fontWeight: "bold",
+        });
+        closeBtn.onclick = () => el.remove();
+        el.appendChild(closeBtn);
+        const handle = doc.createElement("div");
+        Object.assign(handle.style, {
+          position: "absolute",
+          right: "-6px",
+          bottom: "-6px",
+          width: "12px",
+          height: "12px",
+          background: "#0af",
+          borderRadius: "3px",
+          cursor: "se-resize",
+        });
+        el.appendChild(handle);
+        let dragging = false,
+          dx = 0,
+          dy = 0;
+        el.addEventListener("mousedown", (e) => {
+          if (e.target === handle || e.target === closeBtn) return;
+          dragging = true;
+          const r = el.getBoundingClientRect();
+          dx = e.clientX - r.left;
+          dy = e.clientY - r.top;
+          e.preventDefault();
+        });
+        doc.addEventListener("mousemove", (e) => {
+          if (!dragging) return;
+          const pr = parentEl.getBoundingClientRect();
+          const newL = e.clientX - pr.left - dx + parentEl.scrollLeft;
+          const newT = e.clientY - pr.top - dy + parentEl.scrollTop;
+          const maxL = parentEl.clientWidth - el.offsetWidth;
+          const maxT = parentEl.clientHeight - el.offsetHeight;
+          el.style.left = Math.max(0, Math.min(newL, maxL)) + "px";
+          el.style.top = Math.max(0, Math.min(newT, maxT)) + "px";
+        });
+        doc.addEventListener("mouseup", () => (dragging = false));
+        let resizing = false,
+          sx = 0,
+          sy = 0,
+          sw = 0,
+          sh = 0;
+        handle.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+          resizing = true;
+          sx = e.clientX;
+          sy = e.clientY;
+          sw = el.offsetWidth;
+          sh = el.offsetHeight;
+        });
+        doc.addEventListener("mousemove", (e) => {
+          if (!resizing) return;
+          let newW = sw + (e.clientX - sx),
+            newH = sh + (e.clientY - sy);
+          newW = Math.min(newW, parentEl.clientWidth - el.offsetLeft);
+          newH = Math.min(newH, parentEl.clientHeight - el.offsetTop);
+          el.style.width = Math.max(40, newW) + "px";
+          el.style.height = Math.max(20, newH) + "px";
+        });
+        doc.addEventListener("mouseup", () => (resizing = false));
+        parentEl.appendChild(el);
+      }
+      document.getElementById("sigDrag").ondragstart = (e) => {
+        if (!padSig) return e.preventDefault();
+        e.dataTransfer.setData("sigType", "pad");
+        lastSigType = "pad";
+      };
+      document.getElementById("imgDrag").ondragstart = (e) => {
+        if (!imgSig) return e.preventDefault();
+        e.dataTransfer.setData("sigType", "img");
+        lastSigType = "img";
+      };
+      document.getElementById("applyAllBtn").onclick = () => {
+        const iframes = document.querySelectorAll(".docFrame");
+        let sig =
+          lastSigType === "pad"
+            ? padSig
+            : lastSigType === "name"
+              ? nameSig
+              : imgSig;
+        if (!sig) return setMsg("No signature selected.");
+        iframes.forEach((f) => {
+          const doc = f.contentDocument;
+          doc.querySelectorAll(".signature-line").forEach((line) => {
+            line.style.position = "relative";
+            line.innerHTML = "";
+            createSignatureElement(doc, sig, 0, 0, line);
+          });
+        });
+        setMsg("✅ Signature applied to all lines.");
+      };
+      document.getElementById("cancelBtn").onclick = async () => {
+        const iframes = document.querySelectorAll(".docFrame");
+        iframes.forEach((f) => {
+          const doc = f.contentDocument;
+          doc.querySelectorAll(".placed-signature").forEach((el) =>
+            el.remove(),
+          );
+        });
+        setMsg("❌ Signatures cleared, cancelling...");
+        try {
+          const resp = await fetch(
+            `${BASE}/api/envelopes/${token}/cancel`,
+            { method: "POST" },
+          );
+          setMsg(
+            resp.ok
+              ? "✅ Envelope cancelled successfully."
+              : "⚠️ Cancel API failed.",
+          );
+        } catch {
+          setMsg("❌ Error calling cancel API.");
+        }
+      };
+      document.getElementById("completeBtn").onclick = async () => {
+        setMsg("🧹 Cleaning signatures...");
+        const iframes = document.querySelectorAll(".docFrame");
+        iframes.forEach((f) => {
+          const doc = f.contentDocument;
+          doc.querySelectorAll(".placed-signature").forEach((el) => {
+            el.style.border = "none";
+            el.querySelectorAll("div").forEach((d) => d.remove());
+          });
+        });
+        setMsg("📄 Generating signed PDF...");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        let page = 0;
+        for (const frame of iframes) {
+          const canvas = await html2canvas(frame.contentDocument.body, {
+            scale: 2,
+            backgroundColor: "#ffffff",
+          });
+          const imgData = canvas.toDataURL("image/png");
+          const pdfW = pdf.internal.pageSize.getWidth();
+          const pdfH = pdf.internal.pageSize.getHeight();
+          const ratio = Math.min(
+            pdfW / canvas.width,
+            pdfH / canvas.height,
+          );
+          const w = canvas.width * ratio;
+          const h = canvas.height * ratio;
+          const x = (pdfW - w) / 2;
+          const y = (pdfH - h) / 2;
+          if (page > 0) pdf.addPage();
+          pdf.addImage(imgData, "PNG", x, y, w, h);
+          page++;
+        }
+        const blob = pdf.output("blob");
+        const fd = new FormData();
+        fd.append("file", blob, "signed-envelope.pdf");
+        setMsg("📤 Uploading signed PDF...");
+        try {
+          const resp = await fetch(
+            `${BASE}/api/envelopes/${token}/complete`,
+            { method: "POST", body: fd },
+          );
+          setMsg(
+            resp.ok
+              ? "✅ Signed PDF uploaded successfully!"
+              : "❌ Upload failed.",
+          );
+        } catch {
+          setMsg("❌ Upload error.");
+        }
+      };
+      const expandBtn = document.createElement("button");
+      expandBtn.textContent = "Expand Pad";
+      expandBtn.className = "primary";
+      expandBtn.style.background = "#555";
+      expandBtn.style.marginTop = "6px";
+      document
+        .querySelector("#sigPad")
+        .insertAdjacentElement("afterend", expandBtn);
+      const sigModal = document.getElementById("sigModal"),
+        bigCanvas = document.getElementById("bigSigCanvas"),
+        bigCtx = bigCanvas.getContext("2d");
+      function setupBigCanvas() {
+        const rect = bigCanvas.getBoundingClientRect(),
+          dpr = window.devicePixelRatio || 1;
+        bigCanvas.width = rect.width * dpr;
+        bigCanvas.height = rect.height * dpr;
+        bigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        bigCtx.lineWidth = 5;
+        bigCtx.lineJoin = "round";
+        bigCtx.lineCap = "round";
+        bigCtx.strokeStyle = "#000";
+      }
+      setupBigCanvas();
+      window.addEventListener("resize", setupBigCanvas);
+      let drawingLarge = false,
+        largePoints = [],
+        largeAll = [];
+      function drawSmoothLarge(ctx, pts) {
+        if (pts.length < 3) {
+          const b = pts[0];
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 1, 0, 2 * Math.PI, !0);
+          ctx.fill();
+          return;
+        }
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 2; i++) {
+          const c = (pts[i].x + pts[i + 1].x) / 2,
+            m = (pts[i].y + pts[i + 1].y) / 2;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, c, m);
+        }
+        const n = pts.length - 1;
+        ctx.quadraticCurveTo(
+          pts[n - 1].x,
+          pts[n - 1].y,
+          pts[n].x,
+          pts[n].y,
+        );
+        ctx.stroke();
+      }
+      bigCanvas.addEventListener("mousedown", (e) => {
+        drawingLarge = true;
+        largePoints = [{ x: e.offsetX, y: e.offsetY }];
+      });
+      bigCanvas.addEventListener("mousemove", (e) => {
+        if (!drawingLarge) return;
+        largePoints.push({ x: e.offsetX, y: e.offsetY });
+        bigCtx.clearRect(0, 0, bigCanvas.width, bigCanvas.height);
+        largeAll.forEach((p) => drawSmoothLarge(bigCtx, p));
+        drawSmoothLarge(bigCtx, largePoints);
+      });
+      window.addEventListener("mouseup", () => {
+        if (!drawingLarge) return;
+        drawingLarge = false;
+        largeAll.push(largePoints);
+      });
+      document.getElementById("bigSigClear").onclick = () => {
+        bigCtx.clearRect(0, 0, bigCanvas.width, bigCanvas.height);
+        largeAll = [];
+      };
+      document.getElementById("bigSigClose").onclick = () => {
+        sigModal.style.display = "none";
+      };
+      document.getElementById("bigSigDone").onclick = () => {
+        const dataURL = bigCanvas.toDataURL("image/png");
+        const ctx = sigPad.getContext("2d");
+        clearPad();
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, sigPad.width, sigPad.height);
+          padSig = dataURL;
+          lastSigType = "pad";
+          resetOtherSigns("pad");
+          setMsg(
+            "✅ Signature imported from expanded pad (others cleared)",
+          );
+        };
+        img.src = dataURL;
+        sigModal.style.display = "none";
+      };
+      expandBtn.onclick = () => {
+        bigCtx.clearRect(0, 0, bigCanvas.width, bigCanvas.height);
+        largeAll = [];
+        sigModal.style.display = "flex";
+        setupBigCanvas();
+      };
+      loadEnvelope();
+    })();
+  </script>
+</body>
+
+</html>
