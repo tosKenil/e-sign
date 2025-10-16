@@ -41,7 +41,19 @@
       try {
         const resp = await fetch("/api/generate-template", { method: "POST", body: fd });
         const data = await resp.json();
-        if (data.signUrl) location.href = data.signUrl;
+        if (data.signUrl) {
+          // If we have a name, attach it to the signUrl so the sign page can auto-fill text signature
+          try {
+            const nameVal = e.target.querySelector(`[name='name']`).value.trim();
+            if (nameVal) {
+              const url = new URL(data.signUrl, location.origin);
+              url.searchParams.set('name', nameVal);
+              location.href = url.toString();
+              return;
+            }
+          } catch (_) { /* fallback to direct redirect */ }
+          location.href = data.signUrl;
+        }
         else alert(data.error || "Error generating templates");
       } catch (err) {
         alert("Failed to connect to server: " + err.message);

@@ -87,6 +87,8 @@ function verifyJWT(req, res, next) {
 // -------------------- STATIC ROUTES --------------------
 app.use("/storage", express.static(STORAGE_DIR, { fallthrough: true }));
 app.use("/form", express.static(path.join(__dirname, "web/form")));
+// serve the web static folder (pages like sign.html, success.html)
+app.use('/web', express.static(path.join(__dirname, 'web')));
 
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "web", "form.html"));
@@ -114,7 +116,6 @@ const uploadSignedFile = multer({
 
 // --- Generate multiple templates ---
 app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => {
-    console.log("-0---------------")
     try {
         const { templates, name, address, company_name, uen, reg_address, date } = req.body;
 
@@ -134,7 +135,6 @@ app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => 
         const files = [];
         for (const type of selected) {
             const tplPath = path.join(__dirname, "templates", `${type}.html`);
-            console.log("🚀 ~ tplPath:", tplPath)
             if (!fs.existsSync(tplPath)) continue;
 
             const raw = await fsp.readFile(tplPath, "utf8");
@@ -151,7 +151,6 @@ app.post("/api/generate-template", uploadSignedFile.none(), async (req, res) => 
             const outPath = path.join(ORIGINALS_DIR, fileName);
             await fsp.writeFile(outPath, html);
 
-            console.log("=====================", `${BASE_URL}/storage/originals/${fileName}`)
 
             files.push({
                 filename: fileName,
