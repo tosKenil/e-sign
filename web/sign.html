@@ -582,6 +582,7 @@
 
       document.getElementById("completeBtn").onclick = async () => {
         setMsg("📄 Generating signed PDF...");
+        console.log('Complete button clicked. Preparing PDF and upload...');
 
         // --- Sanitize placed signatures inside iframes before export ---
         // Remove editing chrome (close button, resize handle, dashed border) so exported PDF shows only the signature image.
@@ -640,15 +641,23 @@
         fd.append('file', blob, 'signed-envelope.pdf');
         setMsg('📤 Uploading signed PDF...');
         try {
-          const resp = await fetch(`${BASE}/api/envelopes/${token}/complete`, { method: 'POST', body: fd });
+          const uploadUrl = `${BASE}/api/envelopes/${token}/complete`;
+          console.log('Uploading to', uploadUrl, 'FormData keys:', Array.from(fd.keys()));
+          const resp = await fetch(uploadUrl, { method: 'POST', body: fd });
+          // give more helpful feedback in production: include status and server body
           if (resp && resp.ok) {
             setMsg('✅ Signed PDF uploaded successfully!');
-            // navigate to success page
             try { window.top.location.href = '/web/success.html'; } catch (e) { window.location.href = '/web/success.html'; }
           } else {
-            setMsg('❌ Upload failed.');
+            let bodyText = '';
+            try { bodyText = await resp.text(); } catch (e) { bodyText = '<unable to read response body>'; }
+            console.error('Upload failed', resp.status, bodyText);
+            setMsg(`❌ Upload failed (${resp.status}): ${bodyText}`);
           }
-        } catch { setMsg('❌ Upload error.'); }
+        } catch (err) {
+          console.error('Upload error', err);
+          setMsg('❌ Upload error: ' + (err && err.message ? err.message : String(err)));
+        }
       };
 
       loadEnvelope();

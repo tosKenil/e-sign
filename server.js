@@ -197,6 +197,11 @@ app.get("/api/envelopes/by-token/:token", verifyJWT, async (req, res) => {
 
 app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("file"), async (req, res) => {
     try {
+        console.log('/api/envelopes/:token/complete called for token=', req.params.token, 'userId=', req._id);
+        if (!req.file) {
+            console.warn('No file present on request. Headers:', req.headers['content-type']);
+            return res.status(400).json({ error: 'Missing file in upload' });
+        }
         const env = await Envelope.findById(req._id);
         if (!env) return res.status(404).json({ error: "Envelope not found" });
 
@@ -209,11 +214,20 @@ app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("f
 
         res.json({ ok: true, downloadUrl: env.signedPdf.publicUrl });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Upload failed" });
+        console.error('Error in /api/envelopes/:token/complete', err && err.stack ? err.stack : err);
+        res.status(500).json({ error: err && err.message ? err.message : 'Upload failed' });
     }
 }
 );
+
+// Global error handler to catch multer and other middleware errors and return readable JSON
+app.use((err, req, res, next) => {
+    if (!err) return next();
+    console.error('Unhandled error middleware caught:', err && err.stack ? err.stack : err);
+    // Multer may attach code and message
+    const message = err.message || (err.code ? String(err.code) : 'Server error');
+    res.status(500).json({ error: message });
+});
 
 // --- Cancel envelope ---
 app.post("/api/envelopes/:token/cancel", verifyJWT, async (req, res) => {
