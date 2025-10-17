@@ -197,7 +197,6 @@ app.get("/api/envelopes/by-token/:token", verifyJWT, async (req, res) => {
 
 app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("file"), async (req, res) => {
     try {
-        console.log('/api/envelopes/:token/complete called for token=', req.params.token, 'userId=', req._id);
         if (!req.file) {
             console.warn('No file present on request. Headers:', req.headers['content-type']);
             return res.status(400).json({ error: 'Missing file in upload' });
