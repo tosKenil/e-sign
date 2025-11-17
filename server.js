@@ -18,7 +18,7 @@ app.use(express.json({ limit: "20mb" }));
 app.use(cors({
     origin: [
         "http://localhost:3000",
-        "https://e-sign-eight.vercel.app"
+        "https://your-project-name.vercel.app" // change this
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true
@@ -441,4 +441,8 @@ app.use((err, req, res, next) => {
 });
 
 // -------------------- START --------------------
-app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
+}
+
+module.exports = app;
