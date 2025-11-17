@@ -369,6 +369,10 @@ app.get("/api/envelopes/by-token/:token", verifyJWT, async (req, res) => {
     });
 });
 
+app.get("/api/test", async (req, res) => {
+    res.json({ ok: true, message: "Test endpoint working" });
+});
+
 // --- Complete (upload signed pdf) for THIS signer ---
 app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("file"), async (req, res) => {
     try {
