@@ -15,7 +15,6 @@ const sendMail = require("./sendmail.js");
 
 const app = express();
 app.use(express.json({ limit: "20mb" }));
-app.use(express.static("web"));
 app.use(cors({
     origin: [
         "http://localhost:3000",
@@ -377,7 +376,6 @@ app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("f
         }
 
         const env = await Envelope.findById(req.envId);
-        console.log("🚀 ~ env:", env)
         if (!env) return res.status(404).json({ error: "Envelope not found" });
 
         // find signer by index or email
@@ -443,8 +441,4 @@ app.use((err, req, res, next) => {
 });
 
 // -------------------- START --------------------
-if (require.main === module) {
-    app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
-}
-
-module.exports = app;
+app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
