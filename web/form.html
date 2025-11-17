@@ -1,62 +1,320 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>Generate eSign</title>
+  <meta charset="utf-8" />
+  <title>Generate eSign (Multi-Recipient)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin: 24px;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+    }
+
+    form {
+      max-width: 720px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 12px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .row textarea,
+    .row input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .checks {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      color: #666;
+      font-size: 12px;
+    }
+
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    .results {
+      margin-top: 24px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f7f7f7;
+      text-align: left;
+    }
+
+    .ok {
+      color: #0a7a2f;
+      font-weight: 600;
+    }
+
+    .fail {
+      color: #b00020;
+      font-weight: 600;
+    }
+
+    .flex {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ccc;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .copy {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+  </style>
 </head>
 
 <body>
   <h2>Generate Multiple Templates</h2>
-  <form id="genForm">
-    <label>Select Templates:</label><br>
-    <label><input type="checkbox" name="templates" value="form45"> Form 45</label><br>
-    <label><input type="checkbox" name="templates" value="form45b"> Form 45B</label><br>
-    <label><input type="checkbox" name="templates" value="firstDriw"> First Draw</label><br><br>
 
-    <input name="company_name" placeholder="Company Name" required><br><br>
-    <input name="uen" placeholder="UEN"><br><br>
-    <input name="name" placeholder="Full Name" required><br><br>
-    <input name="reg_address" placeholder="Registered Address" required><br><br>
-    <input name="address" placeholder="Address" required><br><br>
-    <input name="date" type="date" required><br><br>
-    <button type="submit">Generate & Sign</button>
+  <form id="genForm">
+    <div class="row">
+      <label>Templates</label>
+      <div class="checks">
+        <label><input type="checkbox" name="templates" value="form45"> Form 45</label>
+        <label><input type="checkbox" name="templates" value="form45b"> Form 45B</label>
+        <label><input type="checkbox" name="templates" value="firstDriw"> First Draw</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <label>Company Name</label>
+      <input name="company_name" placeholder="Company Name" required />
+    </div>
+
+    <div class="row">
+      <label>UEN</label>
+      <input name="uen" placeholder="UEN" />
+    </div>
+
+    <div class="row">
+      <label>Full Name</label>
+      <input name="name" placeholder="Full Name" required />
+    </div>
+
+    <div class="row">
+      <label>Registered Address</label>
+      <input name="reg_address" placeholder="Registered Address" required />
+    </div>
+
+    <div class="row">
+      <label>Address</label>
+      <input name="address" placeholder="Address" required />
+    </div>
+
+    <div class="row">
+      <label>Date</label>
+      <input name="date" type="date" required />
+    </div>
+
+    <div class="row">
+      <label>Recipient Emails</label>
+      <textarea name="emails" rows="4" placeholder="one@example.com, two@example.com&#10;or one per line"
+        required></textarea>
+    </div>
+    <div class="row">
+      <label></label>
+      <div class="muted">Separate by commas, semicolons, or put one email per line. Duplicates are removed.</div>
+    </div>
+
+    <div class="row">
+      <label></label>
+      <button type="submit" id="submitBtn">
+        <span class="btnText">Generate & Send</span>
+      </button>
+    </div>
   </form>
 
+  <div class="results" id="results" hidden>
+    <div class="flex">
+      <h3 style="margin:0">Results</h3>
+      <div id="summary" class="muted"></div>
+    </div>
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Sign Link</th>
+          <th>Envelope ID</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>/
+
   <script>
-    document.getElementById("genForm").onsubmit = async e => {
+    const form = document.getElementById("genForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const btnText = submitBtn.querySelector(".btnText");
+    const resultsBox = document.getElementById("results");
+    const resultsTableBody = document.querySelector("#resultsTable tbody");
+    const summary = document.getElementById("summary");
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      btnText.innerHTML = isLoading ? '<span class="spinner"></span> Generating…' : 'Generate & Send';
+    }
+
+    function parseEmails(str) {
+      return String(str || "")
+        .split(/[\n,;]+/)
+        .map(e => e.trim())
+        .filter(Boolean);
+    }
+
+    function copyText(text) {
+      navigator.clipboard?.writeText(text).catch(() => { });
+    }
+
+    form.onsubmit = async (e) => {
       e.preventDefault();
 
+      const checked = [...document.querySelectorAll("input[name='templates']:checked")].map(b => b.value);
+      if (checked.length === 0) {
+        alert("Please select at least one template.");
+        return;
+      }
+
+      // Collect fields
       const fd = new FormData();
-      const boxes = [...document.querySelectorAll("input[name='templates']:checked")].map(b => b.value);
-      if (boxes.length === 0) return alert("Please select at least one template.");
+      fd.append("templates", JSON.stringify(checked));
 
-      fd.append("templates", JSON.stringify(boxes));
-
-      ["company_name", "uen", "name", "reg_address", "address", "date"].forEach(id => {
-        const el = e.target.querySelector(`[name='${id}']`);
-        if (el) fd.append(id, el.value);
+      ["company_name", "uen", "name", "reg_address", "address", "date"].forEach((name) => {
+        const el = form.querySelector(`[name='${name}']`);
+        if (el) fd.append(name, el.value);
       });
+
+      // Emails: allow raw string; server handles JSON or delimited. Here we also send JSON for clarity.
+      const emailsRaw = form.querySelector("[name='emails']").value;
+      const emailList = parseEmails(emailsRaw);
+      if (emailList.length === 0) {
+        alert("Please enter at least one recipient email.");
+        return;
+      }
+      fd.append("emails", JSON.stringify(emailList));
+
+      setLoading(true);
+      resultsBox.hidden = true;
+      resultsTableBody.innerHTML = "";
+      summary.textContent = "";
 
       try {
         const resp = await fetch("/api/generate-template", { method: "POST", body: fd });
         const data = await resp.json();
-        if (data.signUrl) {
-          // If we have a name, attach it to the signUrl so the sign page can auto-fill text signature
-          try {
-            const nameVal = e.target.querySelector(`[name='name']`).value.trim();
-            if (nameVal) {
-              const url = new URL(data.signUrl, location.origin);
-              url.searchParams.set('name', nameVal);
-              location.href = url.toString();
-              return;
-            }
-          } catch (_) { /* fallback to direct redirect */ }
-          location.href = data.signUrl;
+
+        if (!resp.ok) {
+          alert(data?.error || "Server error");
+          setLoading(false);
+          return;
         }
-        else alert(data.error || "Error generating templates");
+
+        // Expecting: { ok, generatedFiles, recipients, success, failed, results: [{email, ok, signUrl?, envelopeId?, error?}, ...] }
+        const rows = (data.results || []).map((r, idx) => {
+          const tr = document.createElement("tr");
+
+          const tdIdx = document.createElement("td");
+          tdIdx.textContent = String(idx + 1);
+
+          const tdEmail = document.createElement("td");
+          tdEmail.textContent = r.email || "";
+
+          const tdStatus = document.createElement("td");
+          tdStatus.innerHTML = r.ok ? '<span class="ok">Sent</span>' : `<span class="fail">Failed</span>${r.error ? `<div class="muted">${r.error}</div>` : ""}`;
+
+          const tdLink = document.createElement("td");
+          if (r.signUrl) {
+            const a = document.createElement("a");
+            a.href = r.signUrl;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = "Open sign link";
+            tdLink.appendChild(a);
+
+            const copyBtn = document.createElement("button");
+            copyBtn.type = "button";
+            copyBtn.className = "copy";
+            copyBtn.textContent = "Copy";
+            copyBtn.onclick = () => copyText(r.signUrl);
+            tdLink.appendChild(document.createTextNode(" "));
+            tdLink.appendChild(copyBtn);
+          } else {
+            tdLink.textContent = "-";
+          }
+
+          const tdEnv = document.createElement("td");
+          tdEnv.textContent = r.envelopeId || "-";
+
+          tr.append(tdIdx, tdEmail, tdStatus, tdLink, tdEnv);
+          return tr;
+        });
+
+        rows.forEach(tr => resultsTableBody.appendChild(tr));
+        summary.textContent = ` (Files: ${data.generatedFiles ?? "-"}, Recipients: ${data.recipients ?? emailList.length}, Success: ${data.success ?? 0}, Failed: ${data.failed ?? 0})`;
+        resultsBox.hidden = false;
+
+        // Optional: if only ONE recipient and success, you might auto-open their sign link:
+        if ((data.results || []).length === 1 && data.results[0]?.ok && data.results[0]?.signUrl) {
+          // If you still want to pass ?name for auto-fill:
+          try {
+            const nameVal = form.querySelector("[name='name']").value.trim();
+            const url = new URL(data.results[0].signUrl, location.origin);
+            if (nameVal) url.searchParams.set("name", nameVal);
+            // window.location.href = url.toString(); // <- uncomment to auto-redirect for single recipient
+          } catch { }
+        }
       } catch (err) {
         alert("Failed to connect to server: " + err.message);
+      } finally {
+        setLoading(false);
       }
     };
   </script>
