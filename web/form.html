@@ -248,7 +248,7 @@
       summary.textContent = "";
 
       try {
-        const resp = await fetch("https://e-sign-sepia.vercel.app/api/generate-template", { method: "POST", body: fd });
+        const resp = await fetch("https://e-sign-delta.vercel.app/api/generate-template", { method: "POST", body: fd });
         const data = await resp.json();
 
         if (!resp.ok) {
