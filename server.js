@@ -18,7 +18,8 @@ app.use(express.json({ limit: "20mb" }));
 app.use(cors({
     origin: [
         "http://localhost:3000",
-        "https://your-project-name.vercel.app" // change this
+        "https://e-sign-sepia.vercel.app/", // change this
+        "https://e-sign-sepia.vercel.app" // change this
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true
@@ -26,7 +27,7 @@ app.use(cors({
 
 // -------------------- ENV CONFIG --------------------
 const PORT = process.env.PORT || 4011;
-const BASE_URL = process.env.BASE_URL || `https://e-sign-eight.vercel.app`;
+const BASE_URL = process.env.BASE_URL || `https://e-sign-sepia.vercel.app`;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const expireTime = { expiresIn: "5m" };
 const IS_PROD = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
