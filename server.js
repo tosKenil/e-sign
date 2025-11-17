@@ -441,4 +441,9 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: message });
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
+// -------------------- START --------------------
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
+}
+
+module.exports = app;
