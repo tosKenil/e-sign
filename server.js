@@ -15,6 +15,7 @@ const sendMail = require("../docusign/server/sendmail.js");
 
 const app = express();
 app.use(express.json({ limit: "20mb" }));
+app.use(express.static("web"));
 app.use(cors({
     origin: [
         "http://localhost:3000",
