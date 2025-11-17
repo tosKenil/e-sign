@@ -12,6 +12,7 @@ const jwt = require("jsonwebtoken");
 const ejs = require("ejs");
 const { SIGN_EVENTS } = require("./contance.js"); // { PENDING,SENT,DELIVERED,COMPLETED,VOIDED }
 const sendMail = require("../docusign/server/sendmail.js");
+const serverless = require("serverless-http");
 
 const app = express();
 app.use(express.json({ limit: "20mb" }));
@@ -443,4 +444,4 @@ app.use((err, req, res, next) => {
 
 // -------------------- START --------------------
 // app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
-module.exports = app;
+module.exports = serverless(app);
