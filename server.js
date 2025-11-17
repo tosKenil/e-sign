@@ -11,7 +11,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const ejs = require("ejs");
 const { SIGN_EVENTS } = require("./contance.js"); // { PENDING,SENT,DELIVERED,COMPLETED,VOIDED }
-const sendMail = require("../docusign/server/sendmail.js");
+const sendMail = require("./sendmail.js");
 
 const app = express();
 app.use(express.json({ limit: "20mb" }));
@@ -377,6 +377,7 @@ app.post("/api/envelopes/:token/complete", verifyJWT, uploadSignedFile.single("f
         }
 
         const env = await Envelope.findById(req.envId);
+        console.log("🚀 ~ env:", env)
         if (!env) return res.status(404).json({ error: "Envelope not found" });
 
         // find signer by index or email
