@@ -5,7 +5,9 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" },
-    { "src": "/storage/(.*)", "dest": "/storage/$1" },
-    { "src": "/(.*)", "dest": "/web/$1" }
+    { "src": "/sign/(.*)", "dest": "/api/index.js" },
+    { "src": "/storage/(.*)", "dest": "/api/index.js" },
+    { "src": "^/$", "dest": "/web/form.html" },
+    { "src": "(.*)", "dest": "/web/$1" }
   ]
 }
