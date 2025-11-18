@@ -215,7 +215,8 @@
       const stage = document.getElementById("stage"),
         msg = document.getElementById("msg"),
         token = location.pathname.split("/").pop(),
-        BASE = 'https://e-sign-delta.vercel.app';
+        // BASE = 'https://29433kp4-4011.inc1.devtunnels.ms';
+        BASE = location.origin;
       let padSig = null, nameSig = null, imgSig = null, lastSigType = null;
 
       function setMsg(t) { msg.textContent = t || ""; }
@@ -681,7 +682,7 @@
         const maxPayload = 5 * 1024 * 1024; // 5MB practical upper bound
         if (blob.size > maxPayload) {
           console.warn('Generated PDF too large:', blob.size);
-          setMsg(`❌ Upload failed (generated file too large: ${(blob.size/1024/1024).toFixed(2)} MB). Try reducing signature size or self-hosting the API.`);
+          setMsg(`❌ Upload failed (generated file too large: ${(blob.size / 1024 / 1024).toFixed(2)} MB). Try reducing signature size or self-hosting the API.`);
           return;
         }
         const fd = new FormData();

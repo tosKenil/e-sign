@@ -18,8 +18,7 @@ app.use(express.json({ limit: "20mb" }));
 app.use(cors({
     origin: [
         "http://localhost:3000",
-        "https://e-sign-delta.vercel.app/", // change this
-        "https://e-sign-delta.vercel.app" // change this
+        "https://29433kp4-4011.inc1.devtunnels.ms/", // change this
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true
@@ -27,7 +26,7 @@ app.use(cors({
 
 // -------------------- ENV CONFIG --------------------
 const PORT = process.env.PORT || 4011;
-const BASE_URL = process.env.BASE_URL || `https://e-sign-delta.vercel.app`;
+const BASE_URL = process.env.BASE_URL || `https://29433kp4-4011.inc1.devtunnels.ms`;
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const expireTime = { expiresIn: "5m" };
 const IS_PROD = process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
@@ -446,8 +445,4 @@ app.use((err, req, res, next) => {
 });
 
 // -------------------- START --------------------
-if (require.main === module) {
-    app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
-}
-
-module.exports = app;
+app.listen(PORT, () => console.log(`🚀 Server running at ${BASE_URL}`));
